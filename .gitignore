@@ -1,0 +1,5 @@
+temp/
+aws-scheduler.zip
+aws-scheduler.zip.backup
+terraform.tfstate
+terraform.tfstate.backup
