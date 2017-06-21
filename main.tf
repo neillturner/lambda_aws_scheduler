@@ -2,7 +2,7 @@
 resource "aws_cloudwatch_event_rule" "check-scheduler-event" {
     name = "check-scheduler-event"
     description = "check-scheduler-event"
-    schedule_expression = "cron(5 * * * ? *)" # 5 minuts past the hour.   "rate(5 minutes)"   
+    schedule_expression = "cron(5 * * * ? *)" # 5 minuts past the hour. for dugging use  "rate(5 minutes)"   
 }
 
 # Cloudwatch event target
@@ -10,10 +10,6 @@ resource "aws_cloudwatch_event_target" "check-scheduler-event-lambda-target" {
     target_id = "check-scheduler-event-lambda-target"
     rule = "${aws_cloudwatch_event_rule.check-scheduler-event.name}"
     arn = "${aws_lambda_function.scheduler_lambda.arn}"
-    input = <<EOF
-{
-}
-EOF
 }
 
 # IAM Role for Lambda function

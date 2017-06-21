@@ -16,9 +16,9 @@ create_schedule_tag_force = False
  
 def init():
     # Setup AWS connection
-    aws_access_key = get_with_default('aws','access_key','')
-    aws_secret_key = get_with_default('aws','secret_key','')
-    aws_region     = os.getenv('AWS_DEFAULT_REGION', 'eu-west-1') # get_with_default('aws', 'region','')
+    aws_access_key = "" 
+    aws_secret_key = "" 
+    aws_region     = os.getenv('AWS_DEFAULT_REGION', '')
  
     global ec2
     if aws_access_key != '':
@@ -36,7 +36,7 @@ def get_with_default(section,name,default):
  
 #
 # Add default 'schedule' tag to instance.
-# (Only if instance.id not excluded and '--force' flag is given on cli.) fix this. 
+# (Only if instance.id not excluded and create_schedule_tag_force variable is True. 
 #
 def create_schedule_tag(instance):
     exclude_list = config.get("schedule","exclude")
@@ -64,19 +64,17 @@ def check():
     if time_zone == 'local':
         hh  = int(time.strftime("%H", time.localtime()))
         day = time.strftime("%a", time.localtime()).lower()
-        logger.info("-----> Checking for instances to start or stop for localtime hour \"%s\"", hh)
+        logger.info("-----> Checking for instances to start or stop for 'local time' hour \"%s\"", hh)
     else:
         hh  = int(time.strftime("%H", time.gmtime()))
         day = time.strftime("%a", time.gmtime()).lower()
-        logger.info("-----> Checking for instances to start or stop for gmt hour \"%s\"", hh)
+        logger.info("-----> Checking for instances to start or stop for 'gmt' hour \"%s\"", hh)
 
     started = []
     stopped = []
  
     schedule_tag = config.get('schedule','tag','schedule')
     logger.info("-----> schedule tag is called \"%s\"", schedule_tag)
-    timeConfig = config.get('schedule','time')
-    logger.info("-----> Using \"%s\" time", timeConfig)    
     for instance in instances:
         logger.info("Evaluating instance \"%s\"", instance.id)
  
@@ -88,7 +86,7 @@ def check():
             schedule = json.loads(data)
 
             try:
-            	if hh == schedule[day]['start'] and not instance.state == 'running':
+            	if hh == schedule[day]['start'] and not instance.state["Name"] == 'running':
             	    logger.info("Starting instance \"%s\"." %(instance.id))
             	    started.append(instance.id)
             	    ec2.instances.filter(InstanceIds=[instance.id]).start()
@@ -96,10 +94,12 @@ def check():
                 pass # catch exception if 'start' is not in schedule.
  
             try:
-                if hh == schedule[day]['stop'] and instance.state == 'running':
-                    logger.info("Stopping instance \"%s\"." %(instance.id))
-                    stopped.append(instance.id)
-                    ec2.instances.filter(InstanceIds=[instance.id]).stop()
+            	if hh == schedule[day]['stop']:
+            	    logger.info("Stopping time matches")
+            	if hh == schedule[day]['stop'] and instance.state["Name"] == 'running':
+            	    logger.info("Stopping instance \"%s\"." %(instance.id))
+            	    stopped.append(instance.id)
+            	    ec2.instances.filter(InstanceIds=[instance.id]).stop()
             except:
                 pass # catch exception if 'stop' is not in schedule.
  
