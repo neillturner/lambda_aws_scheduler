@@ -16,8 +16,8 @@ create_schedule_tag_force = False
  
 def init():
     # Setup AWS connection
-    aws_access_key = "" 
-    aws_secret_key = "" 
+    aws_access_key = ""
+    aws_secret_key = ""
     aws_region     = os.getenv('AWS_DEFAULT_REGION', '')
  
     global ec2
@@ -41,11 +41,16 @@ def get_with_default(section,name,default):
 def create_schedule_tag(instance):
     exclude_list = config.get("schedule","exclude")
  
-    if (create_schedule_tag_force) and (instance not in exclude_list):
-        try:   
+    if (create_schedule_tag_force) and (instance.id not in exclude_list):
+        try: 
+            schedule_tag = config.get('schedule','tag','schedule')
             tag_value = config.get("schedule","default")
-            logger.info("About to create tag on instance %s with value: %s" % (instance.id,tag_value))
-            instance.add_tag('schedule', tag_value)
+            logger.info("About to create %s tag on instance %s with value: %s" % (schedule_tag,instance.id,tag_value))
+            tags = [{
+	        "Key" : schedule_tag, 
+	        "Value" : tag_value
+            }] 
+            instance.create_tags(Tags=tags)
         except Exception as e:
             logger.error("Error adding Tag to instance: %s" % e)
     else:
@@ -83,6 +88,11 @@ def check():
             for tag in instance.tags:
 	        if schedule_tag in tag['Key']:
                     data = tag['Value']
+                    break
+	    else:
+            	# 'schedule' tag not found, create if appropriate.
+            	create_schedule_tag(instance)
+                
             schedule = json.loads(data)
 
             try:
@@ -103,9 +113,7 @@ def check():
             except:
                 pass # catch exception if 'stop' is not in schedule.
  
-        except KeyError as e:
-            # 'schedule' tag not found, create if appropriate.
-            create_schedule_tag(instance)
+
         except ValueError as e:
             # invalid JSON
             logger.error('Invalid value for tag \"schedule\" on instance \"%s\", please check!' %(instance.id))

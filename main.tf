@@ -37,7 +37,8 @@ data "aws_iam_policy_document" "ec2-access-scheduler" {
         actions = [
             "ec2:DescribeInstances",
 	    "ec2:StopInstances",
-            "ec2:StartInstances"
+            "ec2:StartInstances",
+            "ec2:CreateTags"
         ]
         resources = [
             "*",
