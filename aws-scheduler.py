@@ -40,8 +40,13 @@ def get_with_default(section,name,default):
 #
 def create_schedule_tag(instance):
     exclude_list = config.get("schedule","exclude")
+
+    autoscaling = False
+    for tag in instance.tags:
+        if 'aws:autoscaling:groupName' in tag['Key']:
+           autoscaling = True
  
-    if (create_schedule_tag_force) and (instance.id not in exclude_list):
+    if (create_schedule_tag_force) and (instance.id not in exclude_list) and (not autoscaling):
         try: 
             schedule_tag = config.get('schedule','tag','schedule')
             tag_value = config.get("schedule","default")
@@ -54,7 +59,10 @@ def create_schedule_tag(instance):
         except Exception as e:
             logger.error("Error adding Tag to instance: %s" % e)
     else:
-        logger.info("No 'schedule' tag found on instance %s. Use -force to create the tag automagically" % instance.id)
+        if (autoscaling):
+            logger.info("Ignoring instance %s. It is part of an auto scaling group" % instance.id)
+        else:
+            logger.info("No 'schedule' tag found on instance %s. Use -force to create the tag automagically" % instance.id)
  
 #
 # Loop EC2 instances and check if a 'schedule' tag has been set. Next, evaluate value and start/stop instance if needed.

@@ -22,3 +22,14 @@ http://www.tylerbutler.com/2012/05/how-to-install-python-pip-and-virtualenv-on-w
 * terraform apply   (run terraform to deploy)
 
 
+## Options
+
+* if you set the code 'create_schedule_tag_force = True' in the 'aws-scheduler.py' script it with create a default schedule tag for each instance it finds.
+
+* Other options are in the 'aws-scheduler.cfg' file.
+
+* time can be local or gmt.
+
+## Usage
+
+* It works by setting a tag (default name schedule) to a json string giving the stop and start time hour for each day.
